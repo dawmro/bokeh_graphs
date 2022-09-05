@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 
 
@@ -32,7 +32,7 @@ app = Flask(__name__)
 
 
 @app.route('/rawTemperature_plot/<name>')
-def gpu_core_temp_plot(name):
+def raw_temp_plot(name):
 
     #collect data from DB
     print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] raw_temp_plot for "+name+" started!")
@@ -49,17 +49,16 @@ def gpu_core_temp_plot(name):
     i = 0
     for row in c.fetchall():
 
-        #times.append(row[0])
-        times.append(i)
-        i=i+1
-        
+        times.append(datetime.fromtimestamp(int(row[0])))
         rawTemps.append(row[1])
 
         
     c.close()
     conn.close()
-    print(type(rawTemps[0]))
+    print(times[0])
     
+
+ 
 
     
 
