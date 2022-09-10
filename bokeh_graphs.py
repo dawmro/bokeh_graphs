@@ -354,6 +354,52 @@ def temperature_plot(name):
 
 
 
+@app.route('/humidity_plot/<name>')
+def humidity_plot(name):
+
+    #collect data from DB
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] humidity_plot for "+name+" started!")
+
+    conn = sqlite3.connect("db/sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""SELECT timeNow, humidity FROM """+name)
+
+    times = []
+    humiditys = []
+
+    i = 0
+    for row in c.fetchall():
+
+        times.append(datetime.fromtimestamp(int(row[0])))
+        humiditys.append(row[1])
+     
+    c.close()
+    conn.close()
+
+
+    humidity_plot = figure(title='Humidity:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    humidity_plot.line(times, humiditys, name='Humidity', color='fuchsia', line_width=1)
+    humidity_plot.circle(times, humiditys, name='Humidity', fill_color='white', size=8)
+    
+    humidity_plot.xaxis.axis_label = 'Time'
+    humidity_plot.yaxis.axis_label = 'Humidity [%]'
+
+    humidity_plot.ygrid.minor_grid_line_color = 'navy'
+    humidity_plot.ygrid.minor_grid_line_alpha = 0.05
+
+    humidity_plot.add_tools(HoverTool(tooltips=[('Name', '$name'), ('Time', '@x{%Y-%m-%d %H:%M}'), ('Humidity', '@y')],
+                   formatters={'x': 'datetime'}))
+
+    humidity_script, humidity_div = components(humidity_plot)
+
+    cdn_js=CDN.js_files
+
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] humidity_plot for "+name+" done!")
+    return render_template('bokeh_plot.html', name=name, plot_script=humidity_script, plot_div=humidity_div, cdn_js=cdn_js) 
+
+
+
 @app.route('/multiple_plots_view/<name>')
 def multiple_plots(name):
     return render_template('multiple_plots_view.html', name=name)
