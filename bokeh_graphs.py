@@ -287,7 +287,7 @@ def iaqAccuracy_plot(name):
 
 
     iaqAccuracy_plot = figure(title='IAQ Accuracy:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
-    iaqAccuracy_plot.line(times, iaqAccuracys, name='IAQ Accuracy', color='lime', line_width=1)
+    iaqAccuracy_plot.line(times, iaqAccuracys, name='IAQ Accuracy', color='tomato', line_width=1)
     iaqAccuracy_plot.circle(times, iaqAccuracys, name='IAQ Accuracy', fill_color='white', size=8)
     
     iaqAccuracy_plot.xaxis.axis_label = 'Time'
@@ -305,6 +305,52 @@ def iaqAccuracy_plot(name):
 
     print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] iaqAccuracy_plot for "+name+" done!")
     return render_template('bokeh_plot.html', name=name, plot_script=iaqAccuracy_script, plot_div=iaqAccuracy_div, cdn_js=cdn_js)     
+
+
+
+@app.route('/temperature_plot/<name>')
+def temperature_plot(name):
+
+    #collect data from DB
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] temperature_plot for "+name+" started!")
+
+    conn = sqlite3.connect("db/sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""SELECT timeNow, temperature FROM """+name)
+
+    times = []
+    temperatures = []
+
+    i = 0
+    for row in c.fetchall():
+
+        times.append(datetime.fromtimestamp(int(row[0])))
+        temperatures.append(row[1])
+     
+    c.close()
+    conn.close()
+
+
+    temperature_plot = figure(title='Temperature:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    temperature_plot.line(times, temperatures, name='Temperature', color='green', line_width=1)
+    temperature_plot.circle(times, temperatures, name='Temperature', fill_color='white', size=8)
+    
+    temperature_plot.xaxis.axis_label = 'Time'
+    temperature_plot.yaxis.axis_label = 'Temperature [C]'
+
+    temperature_plot.ygrid.minor_grid_line_color = 'navy'
+    temperature_plot.ygrid.minor_grid_line_alpha = 0.05
+
+    temperature_plot.add_tools(HoverTool(tooltips=[('Name', '$name'), ('Time', '@x{%Y-%m-%d %H:%M}'), ('Temperature', '@y')],
+                   formatters={'x': 'datetime'}))
+
+    temperature_script, temperature_div = components(temperature_plot)
+
+    cdn_js=CDN.js_files
+
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] temperature_plot for "+name+" done!")
+    return render_template('bokeh_plot.html', name=name, plot_script=temperature_script, plot_div=temperature_div, cdn_js=cdn_js)  
 
 
 
