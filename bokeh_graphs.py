@@ -119,6 +119,9 @@ def pressure_plot(name):
 
     
 
+@app.route('/multiple_plots_view/<name>')
+def multiple_plots(name):
+    return render_template('multiple_plots_view.html', name=name)
         
     
 if __name__ == '__main__':

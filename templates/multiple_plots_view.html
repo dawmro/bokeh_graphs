@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}
+{{name}}
+{% endblock title %}
+
+
+{% block content %}
+
+
+</div>
+
+<iframe src="http://127.0.0.1:5000/rawTemperature_plot/{{name}}" loading="lazy" frameborder="0" width=1432 height=608 scrolling="no"></iframe>
+
+<iframe src="http://127.0.0.1:5000/pressure_plot/{{name}}" loading="lazy" frameborder="0" width=1432 height=608 scrolling="no"></iframe>
+
+</div>
+
+
+{% endblock content %}
+
+
+
