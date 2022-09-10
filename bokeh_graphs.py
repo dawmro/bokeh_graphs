@@ -27,6 +27,7 @@ from bokeh.models import HoverTool
 app = Flask(__name__)
 
 
+
 @app.route('/rawTemperature_plot/<name>')
 def raw_temp_plot(name):
 
@@ -72,7 +73,7 @@ def raw_temp_plot(name):
     return render_template('bokeh_plot.html', name=name, plot_script=raw_temp_script, plot_div=raw_temp_div, cdn_js=cdn_js) 
 
 
-    
+
 @app.route('/pressure_plot/<name>')
 def pressure_plot(name):
 
@@ -104,7 +105,7 @@ def pressure_plot(name):
     pressure_plot.xaxis.axis_label = 'Time'
     pressure_plot.yaxis.axis_label = 'Pressure [Pa]'
 
-    pressure_plot.ygrid.minor_grid_line_color = 'dodgerblue'
+    pressure_plot.ygrid.minor_grid_line_color = 'navy'
     pressure_plot.ygrid.minor_grid_line_alpha = 0.05
 
     pressure_plot.add_tools(HoverTool(tooltips=[('Name', '$name'), ('Time', '@x{%Y-%m-%d %H:%M}'), ('Pressure', '@y')],
@@ -116,6 +117,52 @@ def pressure_plot(name):
 
     print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] pressure_plot for "+name+" done!")
     return render_template('bokeh_plot.html', name=name, plot_script=pressure_script, plot_div=pressure_div, cdn_js=cdn_js) 
+
+
+
+@app.route('/rawHumidity_plot/<name>')
+def rawHumidity_plot(name):
+
+    #collect data from DB
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] rawHumidity_plot for "+name+" started!")
+
+    conn = sqlite3.connect("db/sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""SELECT timeNow, rawHumidity FROM """+name)
+
+    times = []
+    rawHumiditys = []
+
+    i = 0
+    for row in c.fetchall():
+
+        times.append(datetime.fromtimestamp(int(row[0])))
+        rawHumiditys.append(row[1])
+     
+    c.close()
+    conn.close()
+
+
+    rawHumidity_plot = figure(title='Raw Humidity:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=1430, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    rawHumidity_plot.line(times, rawHumiditys, name='Raw Humidity', color='rosybrown', line_width=1)
+    rawHumidity_plot.circle(times, rawHumiditys, name='Raw Humidity', fill_color='white', size=8)
+    
+    rawHumidity_plot.xaxis.axis_label = 'Time'
+    rawHumidity_plot.yaxis.axis_label = 'Raw Humidity [%]'
+
+    rawHumidity_plot.ygrid.minor_grid_line_color = 'navy'
+    rawHumidity_plot.ygrid.minor_grid_line_alpha = 0.05
+
+    rawHumidity_plot.add_tools(HoverTool(tooltips=[('Name', '$name'), ('Time', '@x{%Y-%m-%d %H:%M}'), ('Raw Humidity', '@y')],
+                   formatters={'x': 'datetime'}))
+
+    rawHumidity_script, rawHumidity_div = components(rawHumidity_plot)
+
+    cdn_js=CDN.js_files
+
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] rawHumidity_plot for "+name+" done!")
+    return render_template('bokeh_plot.html', name=name, plot_script=rawHumidity_script, plot_div=rawHumidity_div, cdn_js=cdn_js) 
 
     
 
