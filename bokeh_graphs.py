@@ -164,6 +164,51 @@ def rawHumidity_plot(name):
     print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] rawHumidity_plot for "+name+" done!")
     return render_template('bokeh_plot.html', name=name, plot_script=rawHumidity_script, plot_div=rawHumidity_div, cdn_js=cdn_js) 
 
+
+
+@app.route('/gasResistance_plot/<name>')
+def gasResistance_plot(name):
+
+    #collect data from DB
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] gasResistance_plot for "+name+" started!")
+
+    conn = sqlite3.connect("db/sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""SELECT timeNow, gasResistance FROM """+name)
+
+    times = []
+    gasResistances = []
+
+    i = 0
+    for row in c.fetchall():
+
+        times.append(datetime.fromtimestamp(int(row[0])))
+        gasResistances.append(row[1])
+     
+    c.close()
+    conn.close()
+
+
+    gasResistance_plot = figure(title='Gas Resistance:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=1430, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    gasResistance_plot.line(times, gasResistances, name='Gas Resistance', color='maroon', line_width=1)
+    gasResistance_plot.circle(times, gasResistances, name='Gas Resistance', fill_color='white', size=8)
+    
+    gasResistance_plot.xaxis.axis_label = 'Time'
+    gasResistance_plot.yaxis.axis_label = 'Gas Resistance [Ohm]'
+
+    gasResistance_plot.ygrid.minor_grid_line_color = 'navy'
+    gasResistance_plot.ygrid.minor_grid_line_alpha = 0.05
+
+    gasResistance_plot.add_tools(HoverTool(tooltips=[('Name', '$name'), ('Time', '@x{%Y-%m-%d %H:%M}'), ('Gas Resistance', '@y')],
+                   formatters={'x': 'datetime'}))
+
+    gasResistance_script, gasResistance_div = components(gasResistance_plot)
+
+    cdn_js=CDN.js_files
+
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] gasResistance_plot for "+name+" done!")
+    return render_template('bokeh_plot.html', name=name, plot_script=gasResistance_script, plot_div=gasResistance_div, cdn_js=cdn_js) 
     
 
 @app.route('/multiple_plots_view/<name>')
