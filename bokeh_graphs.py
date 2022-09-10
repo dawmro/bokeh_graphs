@@ -400,6 +400,52 @@ def humidity_plot(name):
 
 
 
+@app.route('/dewPoint_plot/<name>')
+def dewPoint_plot(name):
+
+    #collect data from DB
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] dewPoint_plot for "+name+" started!")
+
+    conn = sqlite3.connect("db/sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""SELECT timeNow, dewPoint FROM """+name)
+
+    times = []
+    dewPoints = []
+
+    i = 0
+    for row in c.fetchall():
+
+        times.append(datetime.fromtimestamp(int(row[0])))
+        dewPoints.append(row[1])
+     
+    c.close()
+    conn.close()
+
+
+    dewPoint_plot = figure(title='Dew Point:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    dewPoint_plot.line(times, dewPoints, name='Dew Point', color='fuchsia', line_width=1)
+    dewPoint_plot.circle(times, dewPoints, name='Dew Point', fill_color='white', size=8)
+    
+    dewPoint_plot.xaxis.axis_label = 'Time'
+    dewPoint_plot.yaxis.axis_label = 'Dew Point [C]'
+
+    dewPoint_plot.ygrid.minor_grid_line_color = 'navy'
+    dewPoint_plot.ygrid.minor_grid_line_alpha = 0.05
+
+    dewPoint_plot.add_tools(HoverTool(tooltips=[('Name', '$name'), ('Time', '@x{%Y-%m-%d %H:%M}'), ('Dew Point', '@y')],
+                   formatters={'x': 'datetime'}))
+
+    dewPoint_script, dewPoint_div = components(dewPoint_plot)
+
+    cdn_js=CDN.js_files
+
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] dewPoint_plot for "+name+" done!")
+    return render_template('bokeh_plot.html', name=name, plot_script=dewPoint_script, plot_div=dewPoint_div, cdn_js=cdn_js) 
+
+
+
 @app.route('/multiple_plots_view/<name>')
 def multiple_plots(name):
     return render_template('multiple_plots_view.html', name=name)
