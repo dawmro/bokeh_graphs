@@ -535,6 +535,52 @@ def co2Equivalent_plot(name):
     return render_template('bokeh_plot.html', name=name, plot_script=co2Equivalent_script, plot_div=co2Equivalent_div, cdn_js=cdn_js) 
 
 
+
+@app.route('/breathVocEquivalent_plot/<name>')
+def breathVocEquivalent_plot(name):
+
+    #collect data from DB
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] staticIaq_plot for "+name+" started!")
+
+    conn = sqlite3.connect("db/sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""SELECT timeNow, breathVocEquivalent FROM """+name)
+
+    times = []
+    breathVocEquivalents = []
+
+    i = 0
+    for row in c.fetchall():
+
+        times.append(datetime.fromtimestamp(int(row[0])))
+        breathVocEquivalents.append(row[1])
+     
+    c.close()
+    conn.close()
+
+
+    breathVocEquivalent_plot = figure(title='Breath VOC Equivalent:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    breathVocEquivalent_plot.line(times, breathVocEquivalents, name='Breath VOC Equivalent', color='darksalmon', line_width=1)
+    breathVocEquivalent_plot.circle(times, breathVocEquivalents, name='Breath VOC Equivalent', fill_color='white', size=8)
+    
+    breathVocEquivalent_plot.xaxis.axis_label = 'Time'
+    breathVocEquivalent_plot.yaxis.axis_label = 'Breath VOC Equivalent [?]'
+
+    breathVocEquivalent_plot.ygrid.minor_grid_line_color = 'navy'
+    breathVocEquivalent_plot.ygrid.minor_grid_line_alpha = 0.05
+
+    breathVocEquivalent_plot.add_tools(HoverTool(tooltips=[('Name', '$name'), ('Time', '@x{%Y-%m-%d %H:%M}'), ('Breath VOC Equivalent', '@y')],
+                   formatters={'x': 'datetime'}))
+
+    breathVocEquivalent_script, breathVocEquivalent_div = components(breathVocEquivalent_plot)
+
+    cdn_js=CDN.js_files
+
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] breathVocEquivalent_plot for "+name+" done!")
+    return render_template('bokeh_plot.html', name=name, plot_script=breathVocEquivalent_script, plot_div=breathVocEquivalent_div, cdn_js=cdn_js) 
+
+
 @app.route('/multiple_plots_view/<name>')
 def multiple_plots(name):
     return render_template('multiple_plots_view.html', name=name)
