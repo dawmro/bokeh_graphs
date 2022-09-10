@@ -445,7 +445,6 @@ def dewPoint_plot(name):
     return render_template('bokeh_plot.html', name=name, plot_script=dewPoint_script, plot_div=dewPoint_div, cdn_js=cdn_js) 
 
 
-
 @app.route('/staticIaq_plot/<name>')
 def staticIaq_plot(name):
 
@@ -490,6 +489,50 @@ def staticIaq_plot(name):
     print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] staticIaq_plot for "+name+" done!")
     return render_template('bokeh_plot.html', name=name, plot_script=staticIaq_script, plot_div=staticIaq_div, cdn_js=cdn_js) 
 
+
+@app.route('/co2Equivalent_plot/<name>')
+def co2Equivalent_plot(name):
+
+    #collect data from DB
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] staticIaq_plot for "+name+" started!")
+
+    conn = sqlite3.connect("db/sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""SELECT timeNow, co2Equivalent FROM """+name)
+
+    times = []
+    co2Equivalents = []
+
+    i = 0
+    for row in c.fetchall():
+
+        times.append(datetime.fromtimestamp(int(row[0])))
+        co2Equivalents.append(row[1])
+     
+    c.close()
+    conn.close()
+
+
+    co2Equivalent_plot = figure(title='CO2 Equivalent:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    co2Equivalent_plot.line(times, co2Equivalents, name='CO2 Equivalent', color='darksalmon', line_width=1)
+    co2Equivalent_plot.circle(times, co2Equivalents, name='CO2 Equivalent', fill_color='white', size=8)
+    
+    co2Equivalent_plot.xaxis.axis_label = 'Time'
+    co2Equivalent_plot.yaxis.axis_label = 'CO2 Equivalent [?]'
+
+    co2Equivalent_plot.ygrid.minor_grid_line_color = 'navy'
+    co2Equivalent_plot.ygrid.minor_grid_line_alpha = 0.05
+
+    co2Equivalent_plot.add_tools(HoverTool(tooltips=[('Name', '$name'), ('Time', '@x{%Y-%m-%d %H:%M}'), ('CO2 Equivalent', '@y')],
+                   formatters={'x': 'datetime'}))
+
+    co2Equivalent_script, co2Equivalent_div = components(co2Equivalent_plot)
+
+    cdn_js=CDN.js_files
+
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] co2Equivalent_plot for "+name+" done!")
+    return render_template('bokeh_plot.html', name=name, plot_script=co2Equivalent_script, plot_div=co2Equivalent_div, cdn_js=cdn_js) 
 
 
 @app.route('/multiple_plots_view/<name>')
