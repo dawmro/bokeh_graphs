@@ -23,9 +23,13 @@ import pandas as pd
 # line plot
 from bokeh.models import HoverTool
 
+# global variable
+bokeh_plot_width = 1800
+
+
+
 
 app = Flask(__name__)
-
 
 
 @app.route('/rawTemperature_plot/<name>')
@@ -52,7 +56,7 @@ def raw_temp_plot(name):
     conn.close()
     
 
-    raw_temp_plot = figure(title='Raw Temperature:', tools='xpan,xwheel_zoom,reset', active_drag = None,  plot_width=1430, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    raw_temp_plot = figure(title='Raw Temperature:', tools='xpan,xwheel_zoom,reset', active_drag = None,  plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
     raw_temp_plot.line(times, rawTemps, name='rawTemp', color='lightsteelblue', line_width=1)
     raw_temp_plot.circle(times, rawTemps, name='rawTemp', fill_color='white', size=8)
     
@@ -98,7 +102,7 @@ def pressure_plot(name):
     conn.close()
 
 
-    pressure_plot = figure(title='Pressure:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=1430, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    pressure_plot = figure(title='Pressure:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
     pressure_plot.line(times, pressures, name='Pressure', color='dodgerblue', line_width=1)
     pressure_plot.circle(times, pressures, name='Pressure', fill_color='white', size=8)
     
@@ -144,7 +148,7 @@ def rawHumidity_plot(name):
     conn.close()
 
 
-    rawHumidity_plot = figure(title='Raw Humidity:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=1430, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    rawHumidity_plot = figure(title='Raw Humidity:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
     rawHumidity_plot.line(times, rawHumiditys, name='Raw Humidity', color='rosybrown', line_width=1)
     rawHumidity_plot.circle(times, rawHumiditys, name='Raw Humidity', fill_color='white', size=8)
     
@@ -190,7 +194,7 @@ def gasResistance_plot(name):
     conn.close()
 
 
-    gasResistance_plot = figure(title='Gas Resistance:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=1430, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    gasResistance_plot = figure(title='Gas Resistance:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
     gasResistance_plot.line(times, gasResistances, name='Gas Resistance', color='maroon', line_width=1)
     gasResistance_plot.circle(times, gasResistances, name='Gas Resistance', fill_color='white', size=8)
     
@@ -209,6 +213,51 @@ def gasResistance_plot(name):
 
     print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] gasResistance_plot for "+name+" done!")
     return render_template('bokeh_plot.html', name=name, plot_script=gasResistance_script, plot_div=gasResistance_div, cdn_js=cdn_js) 
+    
+    
+@app.route('/iaq_plot/<name>')
+def iaq_plot(name):
+
+    #collect data from DB
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] iaq_plot for "+name+" started!")
+
+    conn = sqlite3.connect("db/sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""SELECT timeNow, iaq FROM """+name)
+
+    times = []
+    iaqs = []
+
+    i = 0
+    for row in c.fetchall():
+
+        times.append(datetime.fromtimestamp(int(row[0])))
+        iaqs.append(row[1])
+     
+    c.close()
+    conn.close()
+
+
+    iaq_plot = figure(title='IAQ:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    iaq_plot.line(times, iaqs, name='IAQ', color='olive', line_width=1)
+    iaq_plot.circle(times, iaqs, name='IAQ', fill_color='white', size=8)
+    
+    iaq_plot.xaxis.axis_label = 'Time'
+    iaq_plot.yaxis.axis_label = 'IAQ [?]'
+
+    iaq_plot.ygrid.minor_grid_line_color = 'navy'
+    iaq_plot.ygrid.minor_grid_line_alpha = 0.05
+
+    iaq_plot.add_tools(HoverTool(tooltips=[('Name', '$name'), ('Time', '@x{%Y-%m-%d %H:%M}'), ('IAQ', '@y')],
+                   formatters={'x': 'datetime'}))
+
+    iaq_script, iaq_div = components(iaq_plot)
+
+    cdn_js=CDN.js_files
+
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] iaq_plot for "+name+" done!")
+    return render_template('bokeh_plot.html', name=name, plot_script=iaq_script, plot_div=iaq_div, cdn_js=cdn_js) 
     
 
 @app.route('/multiple_plots_view/<name>')
