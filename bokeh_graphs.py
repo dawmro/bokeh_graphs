@@ -561,7 +561,7 @@ def breathVocEquivalent_plot(name):
 
 
     breathVocEquivalent_plot = figure(title='Breath VOC Equivalent:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
-    breathVocEquivalent_plot.line(times, breathVocEquivalents, name='Breath VOC Equivalent', color='darksalmon', line_width=1)
+    breathVocEquivalent_plot.line(times, breathVocEquivalents, name='Breath VOC Equivalent', color='darkred', line_width=1)
     breathVocEquivalent_plot.circle(times, breathVocEquivalents, name='Breath VOC Equivalent', fill_color='white', size=8)
     
     breathVocEquivalent_plot.xaxis.axis_label = 'Time'
