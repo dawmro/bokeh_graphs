@@ -215,6 +215,7 @@ def gasResistance_plot(name):
     return render_template('bokeh_plot.html', name=name, plot_script=gasResistance_script, plot_div=gasResistance_div, cdn_js=cdn_js) 
     
     
+    
 @app.route('/iaq_plot/<name>')
 def iaq_plot(name):
 
@@ -259,11 +260,59 @@ def iaq_plot(name):
     print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] iaq_plot for "+name+" done!")
     return render_template('bokeh_plot.html', name=name, plot_script=iaq_script, plot_div=iaq_div, cdn_js=cdn_js) 
     
+    
+    
+@app.route('/iaqAccuracy_plot/<name>')
+def iaqAccuracy_plot(name):
+
+    #collect data from DB
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] iaqAccuracy_plot for "+name+" started!")
+
+    conn = sqlite3.connect("db/sensor_data.db")
+    c = conn.cursor()
+
+    c.execute("""SELECT timeNow, iaqAccuracy FROM """+name)
+
+    times = []
+    iaqAccuracys = []
+
+    i = 0
+    for row in c.fetchall():
+
+        times.append(datetime.fromtimestamp(int(row[0])))
+        iaqAccuracys.append(row[1])
+     
+    c.close()
+    conn.close()
+
+
+    iaqAccuracy_plot = figure(title='IAQ Accuracy:', tools='xpan,xwheel_zoom,reset', active_drag = None, plot_width=bokeh_plot_width, plot_height=600, toolbar_location='above', x_axis_type="datetime")
+    iaqAccuracy_plot.line(times, iaqAccuracys, name='IAQ Accuracy', color='lime', line_width=1)
+    iaqAccuracy_plot.circle(times, iaqAccuracys, name='IAQ Accuracy', fill_color='white', size=8)
+    
+    iaqAccuracy_plot.xaxis.axis_label = 'Time'
+    iaqAccuracy_plot.yaxis.axis_label = 'IAQ Accuracy'
+
+    iaqAccuracy_plot.ygrid.minor_grid_line_color = 'navy'
+    iaqAccuracy_plot.ygrid.minor_grid_line_alpha = 0.05
+
+    iaqAccuracy_plot.add_tools(HoverTool(tooltips=[('Name', '$name'), ('Time', '@x{%Y-%m-%d %H:%M}'), ('IAQ Accuracy', '@y')],
+                   formatters={'x': 'datetime'}))
+
+    iaqAccuracy_script, iaqAccuracy_div = components(iaqAccuracy_plot)
+
+    cdn_js=CDN.js_files
+
+    print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] iaqAccuracy_plot for "+name+" done!")
+    return render_template('bokeh_plot.html', name=name, plot_script=iaqAccuracy_script, plot_div=iaqAccuracy_div, cdn_js=cdn_js)     
+
+
 
 @app.route('/multiple_plots_view/<name>')
 def multiple_plots(name):
     return render_template('multiple_plots_view.html', name=name)
         
+    
     
 if __name__ == '__main__':
     app.run(debug = False) 
