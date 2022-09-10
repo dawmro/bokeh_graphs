@@ -24,11 +24,7 @@ import pandas as pd
 from bokeh.models import HoverTool
 
 
-
-
-
 app = Flask(__name__)
-
 
 
 @app.route('/rawTemperature_plot/<name>')
@@ -37,7 +33,6 @@ def raw_temp_plot(name):
     #collect data from DB
     print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] raw_temp_plot for "+name+" started!")
 
-    
     conn = sqlite3.connect("db/sensor_data.db")
     c = conn.cursor()
 
@@ -56,17 +51,12 @@ def raw_temp_plot(name):
     c.close()
     conn.close()
     print(times[0])
-    
 
- 
-
-    
 
     raw_temp_plot = figure(title='Raw Temperature:', tools='xpan,xwheel_zoom,reset', active_drag = None,  plot_width=1430, plot_height=600, toolbar_location='above', x_axis_type="datetime")
-
     raw_temp_plot.line(times, rawTemps, name='rawTemp', color='lightsteelblue', line_width=1)
+    raw_temp_plot.circle(times, rawTemps, name='rawTemp', fill_color='white', size=8)
     
-
     raw_temp_plot.xaxis.axis_label = 'Time'
     raw_temp_plot.yaxis.axis_label = 'Temperature [C]'
 
@@ -79,7 +69,6 @@ def raw_temp_plot(name):
     raw_temp_script, raw_temp_div = components(raw_temp_plot)
 
     cdn_js=CDN.js_files
-
 
     print("["+datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')+" UTC] raw_temp_plot for "+name+" done!")
     return render_template('bokeh_plot.html', name=name, plot_script=raw_temp_script, plot_div=raw_temp_div, cdn_js=cdn_js) 
