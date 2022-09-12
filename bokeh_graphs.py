@@ -30,6 +30,7 @@ bokeh_plot_width = 1800
 
 
 app = Flask(__name__)
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 
 @app.route('/rawTemperature_plot/<name>')
@@ -583,6 +584,7 @@ def breathVocEquivalent_plot(name):
 
 @app.route('/multiple_plots_view/<name>')
 def multiple_plots(name):
+        
     return render_template('multiple_plots_view.html', name=name)
         
     
